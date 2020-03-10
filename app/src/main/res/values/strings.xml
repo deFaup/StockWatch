@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Stock Watch</string>
+    <string name="stock_backup_file">stocks.json</string>
+
+    <!-- JSON values -->
+    <string name="JSONname">name</string>
+    <string name="JSONsymbol">symbol</string>
+
+    <!-- JSON values -->
+    <string name="SQLname">name</string>
+    <string name="SQLsymbol">symbol</string>
+    <string name="SQLprice">price</string>
+    <string name="SQLpriceChange">priceChange</string>
+    <string name="SQLchangePercentage">changePercentage</string>
+
+</resources>
