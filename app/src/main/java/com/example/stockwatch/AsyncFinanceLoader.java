@@ -2,6 +2,7 @@ package com.example.stockwatch;
 
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 
 class AsyncFinanceLoader extends AsyncTask<Stock, Void, Stock>
 {
+    private static final String TAG = "Stock_AsyncFinanceLoader";
     private static final String baseUrl = "https://cloud.iexapis.com/stable/stock/";
     private static final String TOKEN = "pk_c961abca8a594bfca6572dfe74132a2e";
     private MainActivity mainActivity;
@@ -25,14 +27,19 @@ class AsyncFinanceLoader extends AsyncTask<Stock, Void, Stock>
     protected Stock doInBackground(Stock... stocks) {
 
         JSONObject jsonObject = getDataOnStock(stocks[0]);
-        if (jsonObject != null) parseJson(jsonObject, stocks[0]);
-
+        if (jsonObject != null)
+        {
+            int erno = parseJson(jsonObject, stocks[0]);
+            if (erno == -1) return null;
+        }
         return stocks[0];
     }
 
     @Override
-    protected void onPostExecute(Stock stock) {
-        mainActivity.postAsyncStockInformation(stock);
+    protected void onPostExecute(Stock stock)
+    {
+        if (stock != null)
+            mainActivity.postAsyncStockInformation(stock);
     }
 
     /* Retrieve financial data about a stock using its symbol, store these in JSON Object */
@@ -69,19 +76,34 @@ class AsyncFinanceLoader extends AsyncTask<Stock, Void, Stock>
     return jsonObject;
     }
     /* Find in JSON the data we need and update the Stock instance */
-    private void parseJson(JSONObject jsonObject, Stock stock)
+    private int parseJson(JSONObject jsonObject, Stock stock)
     {
         try {
+            Log.d(TAG, "parseJson: \n" + jsonObject.toString());
             String companyName = jsonObject.getString("companyName");
             String price = jsonObject.getString("latestPrice");
             String priceChange = jsonObject.getString("change");
             String changePercentage = jsonObject.getString("changePercent");
 
             stock.setName(companyName);
-            stock.setPrice(Double.parseDouble(price));
-            stock.setPriceChange(Double.parseDouble(priceChange));
-            stock.setChangePercentage(Double.parseDouble(changePercentage));
+            if(price.compareTo("null")==0) stock.setPrice(0.0);
+            else stock.setPrice(Double.parseDouble(price));
+
+            if(priceChange.compareTo("null")==0) stock.setPriceChange(0.0);
+            else stock.setPriceChange(Double.parseDouble(priceChange));
+
+            if(changePercentage.compareTo("null")==0) stock.setChangePercentage(0.0);
+            else stock.setChangePercentage(Double.parseDouble(changePercentage));
+
+            return 0;
         }
-        catch (JSONException e) {e.printStackTrace();}
+        catch (JSONException e) {
+            e.printStackTrace();
+            return -1;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 }
