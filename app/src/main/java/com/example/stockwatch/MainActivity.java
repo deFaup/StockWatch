@@ -152,19 +152,16 @@ public class MainActivity extends AppCompatActivity
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-    private boolean appHasNetwork() {
+    private boolean appHasNetwork()
+    {
         ConnectivityManager cm =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        return (cm != null);
-
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
 
-        if (netInfo != null && netInfo.isConnected()) {
-            statusText.setText(R.string.connected);
-        } else {
-            statusText.setText(R.string.not_connected);
-        }
+        if (netInfo != null)
+            return netInfo.isConnected();
+        else return false;
     }
     private void addNewStock()
     {
