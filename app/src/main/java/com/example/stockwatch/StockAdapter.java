@@ -1,5 +1,6 @@
 package com.example.stockwatch;
 
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,10 +48,10 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         // color scheme and arrow Up or Down
         if (stock.getPriceChange() > 0)
         {
-            holder.name.setTextColor(0x4CAF50);
-            holder.symbol.setTextColor(0x4CAF50);
-            holder.price.setTextColor(0x4CAF50);
-            holder.change.setTextColor(0x4CAF50);
+            holder.name.setTextColor(Color.parseColor("#4CAF50"));
+            holder.symbol.setTextColor(Color.parseColor("#4CAF50"));
+            holder.price.setTextColor(Color.parseColor("#4CAF50"));
+            holder.change.setTextColor(Color.parseColor("#4CAF50"));
 
             StringBuilder sb = new StringBuilder();
             sb.append("▲ ").append(stock.getPriceChange());
@@ -61,13 +62,13 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         }
         else if (stock.getPriceChange() < 0)
         {
-            holder.name.setTextColor(0xE91E63);
-            holder.symbol.setTextColor(0xE91E63);
-            holder.price.setTextColor(0xE91E63);
-            holder.change.setTextColor(0xE91E63);
+            holder.name.setTextColor(Color.parseColor("#E91E63"));
+            holder.symbol.setTextColor(Color.parseColor("#E91E63"));
+            holder.price.setTextColor(Color.parseColor("#E91E63"));
+            holder.change.setTextColor(Color.parseColor("#E91E63"));
 
             StringBuilder sb = new StringBuilder();
-            sb.append("▲ ").append(stock.getPriceChange());
+            sb.append("▼ ").append(stock.getPriceChange());
             sb.append("  (");
             sb.append(stock.getChangePercentage());
             sb.append("%)");
