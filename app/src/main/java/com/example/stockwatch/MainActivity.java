@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
@@ -61,11 +62,6 @@ public class MainActivity extends AppCompatActivity
         /* Get tmp list from the DB */
         databaseHandler = new DatabaseHandler(this);
         final ArrayList<Stock> tmpStockList = databaseHandler.loadStocks();
-        //userStockList.addAll(databaseHandler.loadStocks());
-        //OLD
-        //final ArrayList<Stock> tmpStockList =
-        //        myJSON.loadFile(getApplicationContext(),getString(R.string.stock_backup_file));
-        //Log.d(TAG, "onCreate: file loaded");
 
         /* Set up the recycler view */
         recycler = findViewById(R.id.recycler);
@@ -147,7 +143,6 @@ public class MainActivity extends AppCompatActivity
 
 
     /*******************/
-    //Info Dialog
     private void noNetworkDialog()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
