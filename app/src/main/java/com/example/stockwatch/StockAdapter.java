@@ -43,7 +43,7 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
 
         holder.name.setText(stock.getName());
         holder.symbol.setText(stock.getSymbol());
-        holder.price.setText(String.format("%f", stock.getPrice()));
+        holder.price.setText(String.format("%.2f", stock.getPrice()));
 
         // color scheme and arrow Up or Down
         if (stock.getPriceChange() > 0)
@@ -54,9 +54,9 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
             holder.change.setTextColor(Color.parseColor("#4CAF50"));
 
             StringBuilder sb = new StringBuilder();
-            sb.append("▲ ").append(stock.getPriceChange());
+            sb.append("▲ ").append(String.format("%.2f",stock.getPriceChange()));
             sb.append("  (");
-            sb.append(stock.getChangePercentage());
+            sb.append(String.format("%.2f",stock.getChangePercentage()));
             sb.append("%)");
             holder.change.setText(sb.toString());
         }
@@ -68,18 +68,18 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
             holder.change.setTextColor(Color.parseColor("#E91E63"));
 
             StringBuilder sb = new StringBuilder();
-            sb.append("▼ ").append(stock.getPriceChange());
+            sb.append("▼ ").append(String.format("%.2f",stock.getPriceChange()));
             sb.append("  (");
-            sb.append(stock.getChangePercentage());
+            sb.append(String.format("%.2f",stock.getChangePercentage()));
             sb.append("%)");
             holder.change.setText(sb.toString());
         }
         else{
             // if = 0 then default color is used: white
             StringBuilder sb = new StringBuilder();
-            sb.append(stock.getPriceChange());
+            sb.append(String.format("%.2f",stock.getPriceChange()));
             sb.append("  (");
-            sb.append(stock.getChangePercentage());
+            sb.append(String.format("%.2f",stock.getChangePercentage()));
             sb.append("%)");
             holder.change.setText(sb.toString());
         }
