@@ -75,12 +75,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             for (int i = 0; i < cursor.getCount(); i++)
             {
-
                 String name = cursor.getString(0);
                 String symbol = cursor.getString(1);
-                Double price = cursor.getDouble(2);
-                Double priceChange = cursor.getDouble(3);
-                Double changePercentage = cursor.getDouble(4);
+                Double price = 0.0;
+                Double priceChange = 0.0;
+                Double changePercentage = 0.0;
                 Stock newStock = new Stock(name,symbol,price,priceChange,changePercentage);
                 stockList.add(newStock);
 
