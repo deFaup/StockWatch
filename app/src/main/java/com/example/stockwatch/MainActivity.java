@@ -112,7 +112,14 @@ public class MainActivity extends AppCompatActivity
 
     /**** Clicks ****/
     @Override
-    public void onClick(View v) {
+    public void onClick(View v)
+    {
+        int i = recycler.getChildLayoutPosition(v);
+        String stockMarketURL = "http://www.marketwatch.com/investing/stock/"
+                .concat(userStockList.get(i).getSymbol());
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(stockMarketURL));
+        startActivity(intent);
     }
     @Override
     public boolean onLongClick(View v)
