@@ -76,6 +76,10 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         }
         else{
             // if = 0 then default color is used: white
+            holder.name.setTextColor(Color.parseColor("#FFFFFFFF"));
+            holder.symbol.setTextColor(Color.parseColor("#FFFFFFFF"));
+            holder.price.setTextColor(Color.parseColor("#FFFFFFFF"));
+            holder.change.setTextColor(Color.parseColor("#FFFFFFFF"));
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("%.2f",stock.getPriceChange()));
             sb.append("  (");
