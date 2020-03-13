@@ -33,8 +33,8 @@ class AsyncStockLoader extends AsyncTask<Void, Void, Void> {
         StringBuilder sb = new StringBuilder();
         int res = downloadStocks(sb);
 
-        //if (res != 0)
-            //return "ERROR_DOWNLOADING_STOCK_SYMBOLS";
+        if (res != 0)
+            return null;
 
         HashMap<String,String> map_ = parseJSON(sb.toString());
         stockMap.putAll(map_);
@@ -56,7 +56,7 @@ class AsyncStockLoader extends AsyncTask<Void, Void, Void> {
                 String symbol = jStock.getString("symbol");
                 String name = jStock.getString("name");
 
-                stockMap.put(name, symbol);
+                stockMap.put(symbol, name);
             }
             return stockMap;
         }
@@ -92,14 +92,12 @@ class AsyncStockLoader extends AsyncTask<Void, Void, Void> {
             }
 
             Log.d(TAG, "downloadStocks res: " + sb.toString());
-
+            return 0;
         }
         catch (Exception e) {
             Log.e(TAG, "doInBackground: ", e);
             return -1;
         }
-
-        return 0;
     }
 
 
