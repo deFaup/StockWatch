@@ -2,48 +2,47 @@ package com.example.stockwatch;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener, View.OnLongClickListener
 {
-    private HashMap<String,String> stockMap = new HashMap<>();
+    private HashMap<String,String> stockMap = new HashMap<>();  //(symbol,name)
     private ArrayList<Stock> userStockList = new ArrayList<>();
+
+    private ArrayList<String> keySet = new ArrayList<>();
 
     private RecyclerView recycler;
     private StockAdapter stockAdapter;
     private DatabaseHandler databaseHandler;
+    private SwipeRefreshLayout swiper;
 
-    private static int counter = 0;
+    private static int counter = 10;
 
     private static final String TAG = "Stock_MainActivity";
 
@@ -56,45 +55,66 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onCreate: ");
         setContentView(R.layout.activity_main);
 
-        /* Async download of stock symbols + names in stockMap */
-        new AsyncStockLoader(stockMap).execute();
-
-        /* Get tmp list from the DB */
-        databaseHandler = new DatabaseHandler(this);
-        final ArrayList<Stock> tmpStockList = databaseHandler.loadStocks();
-
         /* Set up the recycler view */
         recycler = findViewById(R.id.recycler);
         stockAdapter = new StockAdapter(userStockList, this);
         recycler.setAdapter(stockAdapter);
         recycler.setLayoutManager(new LinearLayoutManager(this));
 
+        /* Swiper */
+        swiper = findViewById(R.id.swiper);
+        swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                doAsyncRefreshStockInformation();
+            }
+        });
+
+        /* Get tmp list from the DB */
+        databaseHandler = new DatabaseHandler(this);
+        final ArrayList<Stock> tmpStockList = databaseHandler.loadStocks();
+
         if (appHasNetwork())
         {
-            for(Stock stock : userStockList)
-                getAsyncStockInformation(stock);
+            /* Async download of stock symbols + names in stockMap */
+            new AsyncStockLoader(stockMap).execute();
+
+            for(Stock stock : tmpStockList)
+                getAsyncStockInformation(stock, this);
         }
         else
         {
-            noNetworkDialog();
             userStockList.addAll(tmpStockList);
             // TODO sort the list but is it really necessary as I will save it sorted
             stockAdapter.notifyDataSetChanged();
         }
+        Log.d(TAG, "onCreate: END");
+
     }
     @Override
-    protected void onDestroy() {
+    protected void onResume()
+    {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+
+        if (!appHasNetwork())
+            noNetworkDialog();
+        else
+        {
+            if(stockMap.isEmpty()) new AsyncStockLoader(stockMap).execute();
+
+        }
+
+        //else refresh
+
+    }
+    @Override
+    protected void onDestroy()
+    {
         databaseHandler.shutDown();
         super.onDestroy();
     }
-    /*
-    @Override
-    protected void onStop()
-    {
-        Log.d(TAG, "onStop: ");
-        myJSON.saveFile(getApplicationContext(),getString(R.string.stock_backup_file),userStockList);
-        super.onStop();
-    }*/
+
 
 
     /**** Menu ****/
@@ -149,7 +169,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    /*******************/
+    /**** Dialogs ****/
     private void noNetworkDialog()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -159,6 +179,109 @@ public class MainActivity extends AppCompatActivity
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+    private void duplicateDialog(String symbol)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Duplicate Stock");
+        builder.setMessage(String.format("Stock symbol %s is already displayed", symbol));
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    private void symbolNotFoundDialog(String symbol)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(String.format("Symbol Not Found: %s", symbol));
+        builder.setMessage("This stock symbol is unknown");
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    public void selectFromListDialog(final CharSequence[] symbolArray)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Make a selection");
+        final MainActivity main = this;
+
+        builder.setItems(symbolArray, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which)
+            {
+                String title = symbolArray[which].toString();
+                int i =0;
+                for(; i < title.length(); ++i)
+                    if (title.charAt(i) == '-') break;
+
+                String symbol = title.substring(0, i-1);
+                String name = stockMap.get(symbol);
+                getAsyncStockInformation(new Stock(name, symbol),main);
+            }
+        });
+
+        builder.setNegativeButton("Nevermind", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {}
+        });
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
+    }
+    private void addStockEntryDialog()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        final EditText et = new EditText(this);
+        et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        et.setGravity(Gravity.CENTER_HORIZONTAL);
+        et.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+        builder.setView(et);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (et.getText().toString().isEmpty()) return;
+                searchFunction(et.getText().toString().toUpperCase());
+            }
+        });
+        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {}
+        });
+
+        builder.setTitle("Stock selection");
+        builder.setMessage("Please enter a stock symbol:");
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    private void searchFunction(String symbol)
+    {
+        ArrayList<String> symbols = new ArrayList<>();
+
+        for(String key : stockMap.keySet())
+            if (key.contains(symbol)) symbols.add(key.concat(" - ").concat(stockMap.get(key)));
+
+        if(symbols.size()==0)
+            symbolNotFoundDialog(symbol);
+
+        else if (symbols.size()==1){
+            String symbolWithName = symbols.get(0);
+            int i = 0;
+            for(; i < symbolWithName.length(); ++i)
+                if (symbolWithName.charAt(i) == '-') break;
+
+            String symbolOnly = symbolWithName.substring(0, i-1);
+            getAsyncStockInformation(new Stock(
+                    stockMap.get(symbolOnly), symbolOnly),this);
+        }
+
+
+        else {
+            final CharSequence[] symbolArray = new CharSequence[symbols.size()];
+            for (int i = 0; i < symbols.size(); ++i)
+                symbolArray[i] = symbols.get(i);
+            selectFromListDialog(symbolArray);
+        }
+    }
+
+
+    /****  ****/
     private boolean appHasNetwork()
     {
         ConnectivityManager cm =
@@ -173,26 +296,60 @@ public class MainActivity extends AppCompatActivity
     private void addNewStock()
     {
         Log.d(TAG, "addNewStock: ");
-        userStockList.add(new Stock("name n°" + counter++, "blabla"));
-        //getStockInformation(userStockList.get(counter-1));
-        stockAdapter.notifyDataSetChanged();
-
+        if(!appHasNetwork()) {noNetworkDialog(); return;}
+        addStockEntryDialog();
     }
-    private void getAsyncStockInformation(@NotNull Stock stock)
+    /*
+        To insert something in the layout and database main == this
+        To update the layout and database main == null
+     */
+    private void getAsyncStockInformation(@NotNull Stock stock,MainActivity main)
     {
         Log.d(TAG, "getAsyncStockInformation: " + stock.getName());
-        new AsyncFinanceLoader(this).execute(stock);
+        new AsyncFinanceLoader(main).execute(stock);
     }
-    //called by AsyncFiance on post exec
     public void postAsyncStockInformation(@NotNull Stock stock)
     {
-        // TODO sort the list of user stocks: can we really sort the list if there are multiple async task running
-        // but I don't have this problem cause I already have my names and symbols in my tmp list
-
         Log.d(TAG, "postAsyncStockInformation: " + stock.getName());
-        userStockList.add(stock);
+        if (!isStockPresent(stock.getSymbol()))
+        {
+            userStockList.add(stock);
+            userStockList.sort(new Comparator<Stock>() {
+                @Override
+                public int compare(Stock o1, Stock o2) {
+                    return o1.getSymbol().compareTo(o2.getSymbol());
+                }
+            });
+            databaseHandler.addStock(stock);
+        }
+        else
+            duplicateDialog(stock.getSymbol());
+
         stockAdapter.notifyDataSetChanged();
     }
+    private void doAsyncRefreshStockInformation()
+    {
+        final ArrayList<Stock> tmpStockList = databaseHandler.loadStocks();
 
+        if (appHasNetwork())
+        {
+            /* Async download of stock symbols + names in stockMap */
+            userStockList.clear();
+            for(Stock stock : tmpStockList)
+                getAsyncStockInformation(stock, this);
+        }
+        else
+            noNetworkDialog();
 
+        stockAdapter.notifyDataSetChanged();
+        swiper.setRefreshing(false);
+    }
+    private boolean isStockPresent(String symbol)
+    {
+        for(Stock item : userStockList)
+        {
+            if (item.getSymbol().compareTo(symbol) == 0) return true;
+        }
+        return false;
+    }
 }

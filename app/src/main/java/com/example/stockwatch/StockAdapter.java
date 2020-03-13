@@ -1,5 +1,6 @@
 package com.example.stockwatch;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,6 +36,7 @@ class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         return new StockViewHolder(itemView);
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@NonNull StockViewHolder holder, int position)
     {

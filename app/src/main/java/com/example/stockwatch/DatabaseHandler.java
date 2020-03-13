@@ -55,6 +55,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
+    boolean isStockPresent(String symbol)
+    {
+        //database.rawQuery("select * from " + TABLE_NAME + "",null);
+
+        Cursor cursor = database.query(
+                TABLE_NAME,  // The table to query
+                new String[]{SYMBOL}, // The columns to return
+                SYMBOL + " = ? ", // The columns for the WHERE clause
+                new String[]{symbol}, // The values for the WHERE clause
+                null, // don't group the rows
+                null, // don't filter by row groups
+                null); // The sort order
+
+        return (cursor!= null);
+    }
+
     ArrayList<Stock> loadStocks()
     {
         // Load countries - return ArrayList of loaded countries
