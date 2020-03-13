@@ -45,7 +45,7 @@ class AsyncFinanceLoader extends AsyncTask<Stock, Void, Stock>
     /* Retrieve financial data about a stock using its symbol, store these in JSON Object */
     private JSONObject getDataOnStock(Stock stock)
     {
-        JSONObject jsonObject = new JSONObject();
+        JSONObject jsonObject = null;
 
         String dataUrl = baseUrl.concat(stock.getSymbol()).concat("/quote?token=").concat(TOKEN);
         Uri dataUri = Uri.parse(dataUrl);
@@ -69,11 +69,12 @@ class AsyncFinanceLoader extends AsyncTask<Stock, Void, Stock>
                 sb.append(line).append('\n');
             }
             jsonObject = new JSONObject(sb.toString());
+            return jsonObject;
         }
         catch (Exception e) {
             e.printStackTrace();
+            return jsonObject;
         }
-    return jsonObject;
     }
     /* Find in JSON the data we need and update the Stock instance */
     private int parseJson(JSONObject jsonObject, Stock stock)
@@ -98,7 +99,8 @@ class AsyncFinanceLoader extends AsyncTask<Stock, Void, Stock>
             return 0;
         }
         catch (JSONException e) {
-            e.printStackTrace();
+            //TODO make Toast if the JSON is missing the fields I'm looking for
+            System.out.println(TAG + ":" + e.getStackTrace());
             return -1;
         }
         catch (Exception e) {
